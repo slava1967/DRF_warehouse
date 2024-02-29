@@ -26,7 +26,7 @@ class WarehouseModelViewSet(viewsets.ModelViewSet):
     @action(detail=True)
     def products(self, request, pk=None):
         warehouse = get_object_or_404(Warehouse.objects.all(), id=pk)
-        prod_in_stock = warehouse.products.filter(orders__isnull=True)
+        prod_in_stock = warehouse.products.filter(products__isnull=True)
         return Response(
             ProductSerializer(prod_in_stock, many=True).data
         )

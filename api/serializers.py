@@ -63,21 +63,8 @@ class WarehouseSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}}
 
 
-product_quantity = Product.objects.only("quantity")[0].quantity
-
-
-def validate_quantity(value):
-    if int(value) < 1:
-        raise serializers.ValidationError('Minimum quantity is 1')
-    if int(value) > product_quantity:
-        raise serializers.ValidationError(
-            f'Maximum quantity available is {product_quantity}')
-    return value
-
-
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    quantity = serializers.IntegerField(validators=[validate_quantity])
 
     class Meta:
         model = Order
@@ -86,7 +73,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         current_user = validated_data.get("user")
-        # current_warehouse = validated_data.get("product.warehouse")
+        current_product = validated_data.get("product")
+
         if current_user.position == "CO":
             order = Order.objects.create(
                 product=validated_data["product"],
@@ -94,7 +82,13 @@ class OrderSerializer(serializers.ModelSerializer):
                 # warehouse=current_warehouse,
                 user=validated_data["user"]
             )
+            if validated_data["quantity"] < 1:
+                raise serializers.ValidationError('Minimum quantity is 1')
+            if validated_data["quantity"] > current_product.quantity:
+                raise serializers.ValidationError(f'Maximum quantity available is {current_product.quantity}')
             order.save()
+            current_product.quantity -= validated_data["quantity"]
+            current_product.save()
             return order
         else:
             raise serializers.ValidationError("Suppliers are not authorized to create orders")

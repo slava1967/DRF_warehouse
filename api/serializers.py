@@ -42,7 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         current_user = validated_data.get("user")
-       
+        # current_warehouse = validated_data.get("warehouse.name")
         if current_user.position == "SU":
             product = Product.objects.create(
                 name=validated_data["name"],

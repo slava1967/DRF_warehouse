@@ -18,15 +18,7 @@ class ProductModelViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch']
     serializer_class = ProductSerializer
 
-    @action(detail=True)
-    def products(self, request, pk=None):
-        warehouse = get_object_or_404(Warehouse.objects.all(), id=pk)
-        prod_in_stock = warehouse.products.filter(product__quantity__isnull=False).exists()
-        return Response(
-            ProductSerializer(prod_in_stock, many=True).data
-        )
-
-
+   
 class WarehouseModelViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer

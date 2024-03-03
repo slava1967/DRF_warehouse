@@ -79,7 +79,6 @@ class OrderSerializer(serializers.ModelSerializer):
             order = Order.objects.create(
                 product=validated_data["product"],
                 quantity=validated_data["quantity"],
-                # warehouse=current_warehouse,
                 user=validated_data["user"]
             )
             if validated_data["quantity"] < 1:

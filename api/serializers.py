@@ -42,6 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         current_user = validated_data.get("user")
+        # current_warehouse = validated_data.get("warehouse.name")
         if current_user.position == "SU":
             product = Product.objects.create(
                 name=validated_data["name"],
@@ -62,8 +63,21 @@ class WarehouseSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}}
 
 
+product_quantity = Product.objects.only("quantity")[0].quantity
+
+
+def validate_quantity(value):
+    if int(value) < 1:
+        raise serializers.ValidationError('Minimum quantity is 1')
+    if int(value) > product_quantity:
+        raise serializers.ValidationError(
+            f'Maximum quantity available is {product_quantity}')
+    return value
+
+
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    quantity = serializers.IntegerField(validators=[validate_quantity])
 
     class Meta:
         model = Order
@@ -72,11 +86,12 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         current_user = validated_data.get("user")
+        # current_warehouse = validated_data.get("product.warehouse")
         if current_user.position == "CO":
             order = Order.objects.create(
                 product=validated_data["product"],
                 quantity=validated_data["quantity"],
-                warehouse=validated_data["warehouse"],
+                # warehouse=current_warehouse,
                 user=validated_data["user"]
             )
             order.save()
